@@ -1,0 +1,37 @@
+CS345 - Starter code for icalc
+
+1. There are two Makefiles: one for using Flex/Bison and the other
+for Lex/Yacc.  They are similar, but there are differences between the
+two toolsets.  Choose the makefile you want to use and rename it to
+Makefile or use the -f flag to the 'make' program as follows:
+
+% make -f Makefile.bison
+
+2. The file icalc.l contains a lexical specification for a very simple
+integer calculator that operates like the Linux 'bc' calculator.
+
+3. The file icalc.y contains a context free grammar specification in
+YACC/Bison BNF for the calclulator.
+
+4. The code should work on Windows if you have the Cygwin toolset
+installed.  See http://www.cygwin.com/ and be sure to download the
+developer tools including flex/bison and/or lex/yacc. To terminate the
+input loop on Windows, use <ctrl-z> instead of <ctrl-d>.
+
+5. If everything makes correctly, you should be left with an executable
+file called 'icalc'.  A successful build and executable should look
+like this:
+
+skylane% make -f Makefile.bison
+bison -dv -bicalc icalc.y
+gcc -g -O   -c -o icalc.o icalc.c
+flex -t icalc.l > scan.c
+gcc -g -O   -c -o scan.o scan.c
+gcc -g -O icalc.o scan.o -o icalc
+
+skylane% icalc
+Welcome to iCalc 1.0. Copyright 2010. Use <ctrl-d> to quit.
+iCalc: 1+2*3
+7
+icalc> exiting...
+
