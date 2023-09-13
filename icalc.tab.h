@@ -43,13 +43,21 @@
      RPAREN = 259,
      LBRACKET = 260,
      RBRACKET = 261,
-     ASSIGN = 262,
-     NUM = 263,
-     REGISTER = 264,
-     PLUS = 265,
-     MINUS = 266,
-     DIV = 267,
-     MULT = 268
+     NUM = 262,
+     REGISTER = 263,
+     PLUS = 264,
+     MINUS = 265,
+     DIV = 266,
+     MULT = 267,
+     POST_INCREMENT = 268,
+     POST_DECREMENT = 269,
+     PRE_INCREMENT = 270,
+     PRE_DECREMENT = 271,
+     ASSIGN = 272,
+     DIV_ASSIGN = 273,
+     MULT_ASSIGN = 274,
+     MINUS_ASSIGN = 275,
+     PLUS_ASSIGN = 276
    };
 #endif
 

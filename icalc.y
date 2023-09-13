@@ -26,12 +26,16 @@ int yylex(); // Declare the lexer function
 
 /* define the tokens returned by the lexer specified in icalc.l */
 
-%token LPAREN RPAREN LBRACKET RBRACKET ASSIGN
+%token LPAREN RPAREN LBRACKET RBRACKET
 %token NUM
 %token REGISTER
 
 %left MINUS PLUS
 %left MULT DIV
+%left POST_DECREMENT POST_INCREMENT
+%right PRE_DECREMENT PRE_INCREMENT
+%right ASSIGN
+%right PLUS_ASSIGN MINUS_ASSIGN MULT_ASSIGN DIV_ASSIGN
 
 /* the grammar "start" symbol */
 
@@ -75,40 +79,29 @@ repl:  /* empty */  { printf("icalc: "); }
 input:   expr { printf("%d\nicalc: ", $1); }
          ;
 
-register_operator_register: 
-        REGISTER PLUS REGISTER { $$ = (registers[$1 - 'a']) + ( registers[$3 - 'a']);}
-     | REGISTER MINUS REGISTER { $$ = (registers[$1 - 'a']) - ( registers[$3 - 'a']);}
-     | REGISTER MULT REGISTER { $$ = (registers[$1 - 'a']) * ( registers[$3 - 'a']);}
-     | REGISTER DIV REGISTER { $$ = (registers[$1 - 'a']) / ( registers[$3 - 'a']);}
 
-register_operator_expr:     
-        REGISTER PLUS expr { $$ = (registers[$1 - 'a']) + $3; }      
-     | REGISTER MINUS expr { $$ = (registers[$1 - 'a']) - $3; }     
-     | REGISTER MULT expr { $$ = (registers[$1 - 'a']) * $3; }      
-     | REGISTER DIV expr { $$ = (registers[$1 - 'a']) / $3; }        
-
-expr_operator_register: 
-        expr PLUS REGISTER { $$ = ($1 + registers[$3 - 'a']); }
-     | expr MINUS REGISTER { $$ = ($1 - registers[$3 - 'a']); }
-     | expr MULT REGISTER { $$ = ($1 * registers[$3 - 'a']); }
-     | expr DIV REGISTER { $$ = ($1 / registers[$3 - 'a']); }
-
-expr: register_operator_register     
-     |expr PLUS expr 		{ $$ = $1 + $3; }
-	 | expr MINUS expr 		{ $$ = $1 - $3; }
+expr: 
+      expr PLUS expr 		{ $$ = $1 + $3; }
+	| expr MINUS expr 		{ $$ = $1 - $3; }
      | expr MULT expr 		{ $$ = $1 * $3; }
      | expr DIV expr 		{ $$ = $1 / $3; }
-	 | LPAREN expr RPAREN           { $$ = $2; }
-	 | NUM 				{ $$ = $1; } 
-	 | REGISTER { $$ = registers[$1 - 'a']; }
-     | REGISTER ASSIGN expr { $$ = registers[$1 - 'a'] = $3; }
-     | REGISTER PLUS ASSIGN expr { $$ = registers[$1 - 'a'] += $4;  }
-     | REGISTER MINUS ASSIGN expr { $$ = registers[$1 - 'a'] -= $4; }
-     | REGISTER MULT ASSIGN expr { $$ = registers[$1 - 'a'] *= $4; }
-     | REGISTER DIV ASSIGN expr { $$ = registers[$1 - 'a'] /= $4; }
-     | register_operator_expr
-     | expr_operator_register
+	| LPAREN expr RPAREN           { $$ = $2; }
+	| NUM 				{ $$ = $1; } 	
+     | register 
      ;
+
+register:  REGISTER { $$ = registers[$1 - 'a']; }
+     | REGISTER ASSIGN expr { $$ = registers[$1 - 'a'] = $3; }
+     | REGISTER PLUS_ASSIGN expr { $$ = registers[$1 - 'a'] += $3;  }
+     | REGISTER MINUS_ASSIGN expr { $$ = registers[$1 - 'a'] -= $3; }
+     | REGISTER MULT_ASSIGN expr { $$ = registers[$1 - 'a'] *= $3; }
+     | REGISTER DIV_ASSIGN expr { $$ = registers[$1 - 'a'] /= $3; }
+     | POST_DECREMENT { $$ = registers[$1 - 'a']--; }
+     | POST_INCREMENT { $$ = registers[$1 - 'a']++; }
+     | PRE_DECREMENT { $$ = --registers[$1 - 'a']; }
+     | PRE_INCREMENT { $$ = ++registers[$1 - 'a']; }
+     ;
+
 
 %% /* end grammar rules */
 

@@ -27,6 +27,28 @@ extern int yylval;
 "("	  { return LPAREN; }
 ")"	  { return RPAREN; }
 "="   { return ASSIGN; }
+"+="  { return PLUS_ASSIGN; }
+"-="  { return MINUS_ASSIGN; }
+"*="  { return MULT_ASSIGN; }
+"/="  { return DIV_ASSIGN; }
+
+
+"--"[a-zA-Z]  { 
+    yylval = *(yytext + 2);
+    return PRE_DECREMENT; 
+}
+"++"[a-zA-Z] { 
+    yylval = *(yytext + 2); 
+    return PRE_INCREMENT; 
+}
+[a-zA-Z]"--" { 
+    yylval = *(yytext + 0); 
+    return POST_DECREMENT; 
+}
+[a-zA-Z]"++" { 
+    yylval = *(yytext + 0); 
+    return POST_INCREMENT; 
+}
 
 [a-zA-Z]    { 
 	yylval = *yytext; 
