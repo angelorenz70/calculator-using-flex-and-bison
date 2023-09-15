@@ -1,17 +1,4 @@
-/* iCalc.y - YACC grammar file for a simple cmd-line integer calculator.
- *
- * See the corresponding calc.l file for the specification of the tokens.
- *
- * See Makefile.bison or Makefile.yacc to build the icalc executable using
- * flex/bison or lex/yacc.
- *
- * Originally written by Dr. Lavender
- */
-
 %{
-/* put C definitions here that are needed for the actions
- * associated with the grammar rules.
- */
 
 #include <stdio.h>
 #include <math.h>
@@ -19,114 +6,112 @@
 #include <ctype.h>
 #include "icalc.tab.h"
 
-float registers[53];
+int registers[26];
+
+const int MAX_INT = 2147483647;
+const int MIN_INT = -2147483648;
+
+int resultPow(int base, int power) {
+    double result = pow(base, power);
+    if (result > MAX_INT) {
+        return MAX_INT;
+    }
+    if (result < MIN_INT) {
+        return MIN_INT;
+    }
+    return (int)result;
+}
+
+int absolute(int abs_){
+    return abs(abs_);
+}
+
+int max_number(int op1, int op2){
+    int result = op1;
+    if(result < op2){
+        result = op2;
+    }
+    return result;
+}
+
+int min_number(int op1, int op2){
+    int result = op1;
+    if(result > op2){
+        result = op2;
+    }
+    return result;
+}
 
 int yylex(); // Declare the lexer function
 %}
 
-/* define the tokens returned by the lexer specified in icalc.l */
+%token LPAREN RPAREN
+%token NUM MAXINT MININT
+%token REGISTER INCREMENT DECREMENT 
+%token PLUS MINUS MULT DIV MOD
+%right POW
+%right MINUS_UNARY
+%left ABSOLUTE
+%left MAX MIN COMMA
 
-%token LPAREN RPAREN LBRACKET RBRACKET
-%token NUM
-%token REGISTER
-
-%left MINUS PLUS
-%left MULT DIV
-%left POST_DECREMENT POST_INCREMENT
-%right PRE_DECREMENT PRE_INCREMENT
+%left PLUS MINUS
+%left MULT DIV MOD
 %right ASSIGN
 %right PLUS_ASSIGN MINUS_ASSIGN MULT_ASSIGN DIV_ASSIGN
 
-/* the grammar "start" symbol */
 
 %start repl
 
 %%  /* begin grammar rules section */
 
-/* grammar rules have the form
-
-   rule:  alt-1 { alt-1 actions }
-        | alt-2 { alt-2 actions }
-	| ...  ...
-        | alt-n { alt-n actions }
-        ;
-
- $$n vars are POSITIONAL variables that can be used
- in actions to obtain the value associated with the
- result of evaluating a rule. So if a rule is of the form
- 
- expr:   expr PLUS term   { $$ = $1 + $3; }
-
- The rule expr can be thought of as a procedure that
- 'invokes the rhs of the rule, which when evaluated
- the action $$ = $1 + $3  is like executing
- return val(expr) + val(term)
-
- */
-
-/* repl is the start symbol which yyparse (see below) "calls" to 
- * start the execution of the parser, but it doesn't parse anything,
- * it just issues a prompt (the Read part of the REPL) and then transfers 
- * control to the 'input' rule which EVALualtes an expression, Prints the
- * answer, and issues another prompt (the LOOP) until EOF is reached.
- */
-
-repl:  /* empty */  { printf("icalc: "); }
-         | repl input '\n'
-         | repl error '\n' { yyerrok; printf("icalc: "); }
-         ;
-
-input:   expr { printf("%d\nicalc: ", $1); }
-         ;
-
-
-expr: 
-      expr PLUS expr 		{ $$ = $1 + $3; }
-	| expr MINUS expr 		{ $$ = $1 - $3; }
-     | expr MULT expr 		{ $$ = $1 * $3; }
-     | expr DIV expr 		{ $$ = $1 / $3; }
-	| LPAREN expr RPAREN           { $$ = $2; }
-	| NUM 				{ $$ = $1; } 	
-     | register 
+repl:  /* empty */ { printf("icalc: "); }
+     | repl input '\n'
+     | repl error '\n' { yyerrok; printf("icalc: "); }
      ;
 
-register:  REGISTER { $$ = registers[$1 - 'a']; }
+input: expr { printf("%d\nicalc: ", $1); }
+     ;
+
+expr:   MINUS_UNARY expr { $$ = -$2; } 
+     | expr PLUS expr { $$ = $1 + $3; }
+     | expr MINUS expr { $$ = $1 - $3; }
+     | expr MULT expr { $$ = $1 * $3; }
+     | expr DIV expr { $$ = $1 / $3; }
+     | expr MOD expr { $$ = $1 % $3; }
+     | expr POW expr { $$ = resultPow($1, $3); }
+     | ABSOLUTE LPAREN expr_list RPAREN { $$ = absolute($3); }
+     | MAX LPAREN expr COMMA expr RPAREN { $$ = max_number($3, $5); }
+     | MIN LPAREN expr COMMA expr RPAREN { $$ = min_number($3, $5); }
+     | LPAREN expr_list RPAREN { $$ = $2; }
+     | NUM { $$ = $1; }
+     | register
+     ;
+
+expr_list: expr { $$ = $1; }
+     | expr_list COMMA expr { $$ = $3}
+     ;
+
+register: REGISTER { $$ = registers[$1 - 'a']; }
      | REGISTER ASSIGN expr { $$ = registers[$1 - 'a'] = $3; }
-     | REGISTER PLUS_ASSIGN expr { $$ = registers[$1 - 'a'] += $3;  }
+     | REGISTER PLUS_ASSIGN expr { $$ = registers[$1 - 'a'] += $3; }
      | REGISTER MINUS_ASSIGN expr { $$ = registers[$1 - 'a'] -= $3; }
      | REGISTER MULT_ASSIGN expr { $$ = registers[$1 - 'a'] *= $3; }
      | REGISTER DIV_ASSIGN expr { $$ = registers[$1 - 'a'] /= $3; }
-     | POST_DECREMENT { $$ = registers[$1 - 'a']--; }
-     | POST_INCREMENT { $$ = registers[$1 - 'a']++; }
-     | PRE_DECREMENT { $$ = --registers[$1 - 'a']; }
-     | PRE_INCREMENT { $$ = ++registers[$1 - 'a']; }
+     | REGISTER DECREMENT { $$ = registers[$2 - 'a']--; } //post
+     | REGISTER INCREMENT { $$ = registers[$2 - 'a']++; } //post
+     | DECREMENT REGISTER { $$ = --registers[$1 - 'a']; } //pre
+     | INCREMENT REGISTER { $$ = ++registers[$1 - 'a']; } //pre
+     | MININT { $$ = MIN_INT; }
+     | MAXINT { $$ = MAX_INT; }
      ;
 
-
-%% /* end grammar rules */
-
-/* yacc helper functions:
- *
- * yyerror - called by yyparse when a parser error is encountered
- *
- * yywrap - called by yyparse when end-of-file is reached. 
- * It must return a non-zero value to cause yyparse to exit.
- */
+%%
 
 int yyerror (char* msg) { fprintf(stderr, "%s\n", msg); }
 int yywrap () 		{ fprintf(stderr, "exiting...\n"); return (1); }
 
-/* main function that invokes the generated parser by calling yyparse. 
- * yyparse is a Yacc function that that automatically calls  the
- * lexical analyzer generated by Lex to fetch tokens for the parser.
- */
-
 int main () 
 { 
-    printf("Welcome to iCalc 1.0. Copyright 2010. Use <ctrl-d> to exit.\n");
-
-    /* call the yacc generated parser entry point for this grammar */
-
     yyparse();  /* call the start rule to begin parsing and evaluating exprs */
 }
 
