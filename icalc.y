@@ -42,22 +42,65 @@ int min_number(int op1, int op2){
     return result;
 }
 
+int and_(int a, int b){
+    return (a && b);
+}
+
+int or_(int a, int b){
+    return (a || b);
+}
+
+int equal(int a, int b){
+    return a == b;
+}
+
+int not_equal(int a, int b){
+    return a != b;
+}
+
+int less_than(int a, int b){
+    return a < b;
+}
+
+int greater_than(int a, int b){
+    return a > b;
+}
+
+int less_than_equal(int a, int b){
+    return a <= b;
+}
+
+int greater_than_equal(int a, int b){
+    return a >= b;
+}
+
+int condition(int a, int b, int c){
+    if(a) {
+        return b;
+    }
+    return c;
+}
+
+
 int yylex(); // Declare the lexer function
 %}
 
 %token LPAREN RPAREN
 %token NUM MAXINT MININT
 %token REGISTER INCREMENT DECREMENT 
-%token PLUS MINUS MULT DIV MOD
+%token PLUS MINUS MULT DIV MOD 
 %right POW
 %right MINUS_UNARY
-%left ABSOLUTE
-%left MAX MIN COMMA
-
-%left PLUS MINUS
-%left MULT DIV MOD
 %right ASSIGN
 %right PLUS_ASSIGN MINUS_ASSIGN MULT_ASSIGN DIV_ASSIGN
+%right QUESTION_MARK COLON
+
+%left ABSOLUTE
+%left MAX MIN COMMA
+%left AND OR
+%left PLUS MINUS
+%left MULT DIV MOD
+%left GREATERTHAN LESSTHAN GREATERTHAN_EQUAL LESSTHAN_EQUAL EQUAL NOT_EQUAL
 
 
 %start repl
@@ -85,6 +128,24 @@ expr:   MINUS_UNARY expr { $$ = -$2; }
      | LPAREN expr_list RPAREN { $$ = $2; }
      | NUM { $$ = $1; }
      | register
+     | logical_operator
+     | rational_operator
+     | conditional_operator
+     ;
+
+logical_operator: expr AND expr { $$ = and_($1,$3); }
+     | expr OR expr { $$ = or_($1,$3); }
+     ;
+
+rational_operator: expr EQUAL expr { $$ = equal($1, $3); }
+     | expr NOT_EQUAL expr { $$ = not_equal($1, $3); }
+     | expr LESSTHAN expr { $$ = less_than($1, $3); }
+     | expr LESSTHAN_EQUAL expr { $$ = less_than_equal($1, $3); }
+     | expr GREATERTHAN expr { $$ = greater_than($1, $3); }
+     | expr GREATERTHAN_EQUAL expr { $$ = greater_than_equal($1, $3); } 
+     ;
+
+conditional_operator: expr QUESTION_MARK expr COLON expr { $$ = condition($1, $3, $5); }
      ;
 
 expr_list: expr { $$ = $1; }

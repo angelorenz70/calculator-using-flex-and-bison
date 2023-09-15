@@ -38,6 +38,17 @@ int unary_minus = 0;
 "min"     { return MIN; }
 "max"     { return MAX; }
 ","       { return COMMA; }
+"&&"      { return AND; }
+"||"      { return OR; }
+"=="      { return EQUAL; }
+"!="      { return NOT_EQUAL; }
+"<="      { return LESSTHAN_EQUAL; }
+">="      { return GREATERTHAN_EQUAL; }
+"<"       { return LESSTHAN; }
+">"       { return GREATERTHAN;}
+"?"       { return QUESTION_MARK; }
+":"       { return COLON; }
+
 
 [a-z]     { yylval = *yytext; return REGISTER; }
 
