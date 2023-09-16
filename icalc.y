@@ -115,14 +115,15 @@ repl:  /* empty */ { printf("icalc: "); }
 input: expr { printf("%d\nicalc: ", $1); }
      ;
 
-expr:   MINUS_UNARY expr { $$ = -$2; } 
+expr: 
+      MINUS expr { $$ = $2 * (-1); }
      | expr PLUS expr { $$ = $1 + $3; }
      | expr MINUS expr { $$ = $1 - $3; }
      | expr MULT expr { $$ = $1 * $3; }
      | expr DIV expr { $$ = $1 / $3; }
      | expr MOD expr { $$ = $1 % $3; }
      | expr POW expr { $$ = resultPow($1, $3); }
-     | ABSOLUTE LPAREN expr_list RPAREN { $$ = absolute($3); }
+     | ABSOLUTE LPAREN expr RPAREN { $$ = absolute($3); }
      | MAX LPAREN expr COMMA expr RPAREN { $$ = max_number($3, $5); }
      | MIN LPAREN expr COMMA expr RPAREN { $$ = min_number($3, $5); }
      | LPAREN expr_list RPAREN { $$ = $2; }
