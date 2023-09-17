@@ -40,6 +40,7 @@ int unary_minus = 0;
 ">"       { return GREATERTHAN;}
 "?"       { return QUESTION_MARK; }
 ":"       { return COLON; }
+"exit"    { return EXIT; }
 
 
 [a-z]     { yylval = *yytext; return REGISTER; }

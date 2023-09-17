@@ -81,10 +81,15 @@ int condition(int a, int b, int c){
     return c;
 }
 
+int terminate(int a){
+    if(a) printf("exiting.......!");
+    return (a) ? 0 : 1;
+}
 
 int yylex(); // Declare the lexer function
 %}
 
+%token EXIT
 %token LPAREN RPAREN
 %token NUM MAXINT MININT
 %token REGISTER INCREMENT DECREMENT 
@@ -132,6 +137,7 @@ expr:
      | logical_operator
      | rational_operator
      | conditional_operator
+     | EXIT LPAREN expr RPAREN { return terminate($3); }
      ;
 
 logical_operator: expr AND expr { $$ = and_($1,$3); }
